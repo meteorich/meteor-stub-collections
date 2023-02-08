@@ -1,6 +1,6 @@
-import { Mongo } from 'meteor/mongo';
-import { Random } from 'meteor/random';
-import sinon from 'sinon';
+import { Mongo } from "meteor/mongo";
+import { Random } from "meteor/random";
+import sinon from "sinon";
 
 const StubCollections = (() => {
   const publicApi = {};
@@ -20,7 +20,10 @@ const StubCollections = (() => {
           connection: null,
           transform: collection._transform,
         };
-        const localCollection = new collection.constructor(collection._name, options);
+        const localCollection = new collection.constructor(
+          collection._name,
+          options
+        );
         privateApi.stubPair({ localCollection, collection });
         privateApi.pairs.set(collection, localCollection);
       }
@@ -46,27 +49,33 @@ const StubCollections = (() => {
   privateApi.symbols = Object.keys(Mongo.Collection.prototype);
 
   privateApi.assignLocalFunctionsToReal = (local, real) => {
+    console.log(
+      "*****",
+      real._name,
+      real.testFunctionFromTypedCollection,
+      Object.keys(real)
+    ); //
     privateApi.symbols.forEach((symbol) => {
-      if (symbol === 'simpleSchema') return;
-      if (typeof local[symbol] !== 'function') return;
-      if (typeof real[symbol] !== 'function') return;
-      privateApi.sandbox.stub(real, symbol).callsFake(
-        local[symbol].bind(local),
-      );
+      if (symbol === "simpleSchema") return;
+      if (typeof local[symbol] !== "function") return;
+      if (typeof real[symbol] !== "function") return;
+      privateApi.sandbox
+        .stub(real, symbol)
+        .callsFake(local[symbol].bind(local));
     });
   };
 
   privateApi.stubPair = (pair) => {
     privateApi.assignLocalFunctionsToReal(
       pair.localCollection,
-      pair.collection,
+      pair.collection
     );
     // If using `matb33:collection-hooks`, make sure direct functions are also
     // stubbed.
     if (pair.collection.direct) {
       privateApi.assignLocalFunctionsToReal(
         pair.localCollection,
-        pair.collection.direct,
+        pair.collection.direct
       );
     }
   };
